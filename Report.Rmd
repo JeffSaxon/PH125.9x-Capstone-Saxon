@@ -1,7 +1,7 @@
 ---
 title: "Identifying Parental Relationships Using the Harvard Personal Genome Project"
 author: "Jeffrey Saxon"
-date: "October 19, 2019"
+date: "October 27, 2019"
 output: pdf_document
 ---
 
@@ -85,11 +85,13 @@ update_data <- function (x, y){
 
 ## Overview
 
-  This project for HarvardX's PH125.9x Capstone course uses publicly-available genetic data from the Harvard Personal Genome Project ("HPGP") to analyze and identify parent-child relationships.  A data set was prepared containing 5000 single nucleotide polymorphism ("SNP") values from 23andme raw data files for 25 individuals, consisting of 10 parent-child pairs (all that were available) and 5 unrelated individuals.  Using the caret package and a simple model that counts the number of identical genotype points (e.g. "AG" and "AG") and the number of completely different genotype points (e.g. "AA" and "GG"), the project found that logistic regression, k-nearest neighbor, random forest and recursive partitioning all identified parental relationships with near 100% balanced accuracy when presented with 200 random genotype values.  Logistic regression was the best performing model over a large part of the range of sample sizes, and, over 200 trials using 80 randomly selected genotype values, it was able to identify parental relationships with a 96.5% sensitivity and a 99.7% specificity.
+  This project for HarvardX's PH125.9x Capstone course uses publicly-available genetic data from the Harvard Personal Genome Project ("HPGP") to analyze and identify parent-child relationships.  A data set was prepared containing 5000 single nucleotide polymorphism ("SNP") values from 23andme raw data files for 25 individuals, consisting of 10 parent-child pairs (all that were available) and 5 unrelated individuals.  Using the caret package and a simple model that counts the number of identical genotype points (e.g. "AG" and "AG") and the number of completely different genotype points (e.g. "AA" and "GG"), the project found that logistic regression, k-nearest neighbors, random forest and recursive partitioning all identified parental relationships with near 100% balanced accuracy when presented with 200 random genotype values.  Logistic regression was the best performing model over a large part of the range of sample sizes, and, over 200 trials using 80 randomly selected genotype values, it was able to identify parental relationships with a 96.5% sensitivity and a 99.7% specificity.
 
 ## Methods/Analysis
 
-The Harvard Personal Genome Project data has an online participant directory that can be filtered to sort participants by the number of related  individuals enrolled in the project.  Only 10 parent-child pairs were identified where 23andme data was available for both parent and child.  Ideally, more examples would have been located, but related individuals are intentionally excluded from the larger 1000 Genomes Project and the use of full sequencing data from the HPGP was difficult due to storage limitations on the laptop used for the project.  Each 23andme file was downloaded and revised to remove leading text in the files.  A separate pedigree file was prepared to list the parent-child pairs as identified from the online directory.  The raw 23andme data files contained 500,000 or more SNP values, so these were reduced by limiting to data on chromosomes 3 through 19 (avoiding any sex-linked values), removing insertions or deletions, and paring to 5000 random SNPs that were available for all individuals.  A 26th individual (a sibling of another participant) was included for future analysis, but was not used in the remainder of the project.
+The Harvard Personal Genome Project data has an online participant directory that can be filtered to sort participants by the number of related  individuals enrolled in the project.  Only 10 parent-child pairs were identified where 23andme data was available for both parent and child.  Ideally, more examples would have been located, but related individuals are intentionally excluded from the larger 1000 Genomes Project and the use of full sequencing data from the HPGP was difficult due to storage limitations on the laptop used for the project.  Each 23andme file was downloaded and revised to remove leading text in the files.  A separate pedigree file was prepared to list the parent-child pairs as identified from the online directory.  The raw 23andme data files contained 500,000 or more SNP values, so these were reduced by limiting to data on chromosomes 3 through 19 (avoiding any sex-linked values), removing insertions or deletions, and paring to 5000 random SNPs that were available for all individuals.  A 26th individual (a sibling of another participant) was included for future analysis, but was not used in the remainder of the project.  A zipped version of the raw data files can be downloaded from Google Drive at the link below (it exceeds size limits for Github):
+
+     https://drive.google.com/file/d/1DtmGXhukCQ_qw7u5uuQRK0ATVZSK2lcY/view?usp=sharing
 
 The starting data file thus contained 5000 SNP genotype values for 26 individuals in tidy format.
 
@@ -137,7 +139,7 @@ test_data_all %>% mutate(Relationship_Type = ifelse(y == 1, "Parental", "Non_Par
 ```
 
 
-A similar relationships can be seen by looking at the number of SNPs that are wholly different (e.g. "AA" and "GG").  This is an important metric because, as between a purported parent and his or her child, it represents a Mendelian error, which would indicate unexpected parentage, a mutation, or an error in the genomic test.  For non-parental relationships, the number of wholly different SNPS increases with the number of SNPs included in the sample and, for parental relationships, remains very low, but often is still above zero, as shown in the diagram below.
+A similar relationships can be seen by looking at the number of SNPs that are wholly different (e.g. "AA" and "GG").  This is an important metric because, as between a putative parent and his or her child, it represents a Mendelian error, which would indicate unexpected parentage, a mutation, or an error in the genomic test.  For non-parental relationships, the number of wholly different SNPS increases with the number of SNPs included in the sample and, for parental relationships, remains very low, but often is still above zero, as shown in the diagram below.
 
 ```{r, echo = FALSE}
 test_data_all %>% mutate(Relationship_Type = ifelse(y == 1, "Parental", "Non_Parental")) %>% ggplot(aes(diff_2, fill=Relationship_Type, position="identity", color=Relationship_Type)) + geom_density(alpha=0.2, position="identity", adjust=1.5) + facet_grid(NumSnps ~ .) + ggtitle("Number of Wholly Different SNPs for Different Sample Sizes")
@@ -174,7 +176,7 @@ e %>% ggplot(aes(PC1, PC2, fill=label)) + geom_point(cex=3, pch=21) + ggtitle("P
 
 ## Results
 
-A training set was prepared consisting of a random selection of 80% of the non-parental relationships and 80% of the parental relationships (to ensure that two positive examples were available for the test set).  The remaining data was assigned to a test set, and the caret package was used to train models using logistic regression ("glm"), k-nearest neighbors ("knn"), random forest ("rf") and recursive partition ("rpart").  The data provided to the models consisted of the number of identical SNP values and the number of wholly different SNP values for each of the 300 possible two-person relationships.  This process was repeated 200 times for each sample size of RSIDs between 5 and 200 (incrementing by 5) and the average sensitivity and specificity obtained by applying the trained models to the test set were saved to a file. Running the series of steps on a laptop took almost a full day, so the code accompanying this project offers a means to download the results rather than running the tests again.
+A training set was prepared consisting of a random selection of 80% of the non-parental relationships and 80% of the parental relationships (to ensure that two positive examples were available for the test set).  The remaining data was assigned to a test set, and the caret package was used to train models using logistic regression ("glm"), k-nearest neighbors ("knn"), random forest ("rf") and recursive partitioning ("rpart").  The data provided to the models consisted of the number of identical SNP values and the number of wholly different SNP values for each of the 300 possible two-person relationships.  This process was repeated 200 times for each sample size of RSIDs between 5 and 200 (incrementing by 5) and the average sensitivity and specificity obtained by applying the trained models to the test set were saved to a file. Running the series of steps on a laptop took almost a full day, so the code accompanying this project offers a means to download the results rather than running the tests again.
 
 The data is characterized by a low prevalence of parental relationships.  This is due to the limited number of available parent child pairs in the source data, and also the nature of the scaling of number of possible relationships (which increases proportionally to the square of the number of individuals).  As a result, for small samples of RSID data, all of the models achieve a high overall accuracy and a high specificity, but a low, or sometimes zero, sensitivity:  the models essentially always guess that each  relationship is non-parental.  The diagram below shows average specificity and sensitivity for the glm model over a range of sample sizes.  
 
@@ -196,11 +198,38 @@ final_results %>% ggplot(aes(NumSnps, Meas, col=MeasType)) + geom_line() + ggtit
 
 ```
 
-All of the models generally perform similarly, except that k-nearest neighbor, possibly due to the small number of available positive results, seems to perform worse until a significant number of SNPs are available.  The low dimensionality of the data as presented to the training algorithmsmay also partly explain why logistic regression, recursive partitioning and random forest models all produced similar results. 
+All of the models generally perform similarly, except that k-nearest neighbors, possibly due to the small number of available positive results, seems to perform worse until a significant number of SNPs are available.  The low dimensionality of the data as presented to the training algorithms may also partly explain why logistic regression, recursive partitioning and random forest models all produced similar results.
+
+The simulation ran using the default parameters for the number of nearest neighbors in the knn model (meaning that 5 through 9 were tested).  Given the low prevalence, tuning using smaller values of k might possibly produce better results, as suggested when the knn model was re-rerun individual times, to inconsistent results, with a tuning grid from 1 through 10 and a sample size of 50.
+
+```{r, echo = FALSE, warning = FALSE}
+
+rsidSample<- sample(allRsids, 50, replace= FALSE)
+first_test<-update_data(complete_data, rsidSample)
+pre_split_data<-first_test %>% mutate(y=as.integer(isParent))
+a<-pre_split_data %>% filter(isParent==TRUE)
+b<-pre_split_data %>% filter(isParent==FALSE)
+test_index_pos<-sample(1:10, 2, replace= FALSE)
+test_index_neg<-sample(1:290, 58, replace= FALSE)
+train_index_pos <- setdiff(1:10, test_index_pos)
+train_index_neg <- setdiff(1:290, test_index_neg)
+test_data<-rbind(a[test_index_pos,], b[test_index_neg,])
+train_data<-rbind(a[train_index_pos,], b[train_index_neg,])
+test_data$y<-as.factor(test_data$y)
+train_data$y<-as.factor(train_data$y)
+train_knn<-train(y~diff_0+diff_2, method="knn", data=train_data, tuneGrid = data.frame(k = seq(1, 10, 1)))
+y_hat_knn <- predict(train_knn, test_data)
+b<- confusionMatrix(y_hat_knn, test_data$y, positive="1")
+
+ggplot(train_knn) + ggtitle("Knn Tuning Results for 50 RSID Sample Size")
+
+```
+
+
 
 ## Conclusion
 
-Distinguishing a parent-child relationship from unrelated individuals becomes a trivial problem with large enough samples of 23andme data.  This project found that, with 80 randomly selected SNP values, logistic regression could identify parental relationships with an average sensitivity of 96.5% and an average specificity of 99.7%.  The results suggest that non-paternity could reliably be identified with fewer than 100 random 23andme genotype values of a putative father and child.  Given the public availability of data sufficient to build these models, the results also suggest that jurisdictions, such as France, that prohibit paternity testing without a court order, will need to continue to substantially limit the ability of fathers to access genetic data of their children.  
+Distinguishing a parent-child relationship from unrelated individuals becomes a trivial problem with large enough samples of 23andme data.  This project found that, with 80 randomly selected SNP values, logistic regression could identify parental relationships with an average sensitivity of 96.5% and an average specificity of 99.7%.  The results suggest that non-paternity could reliably be identified with fewer than 100 random 23andme genotype values of a putative father and child.  Given the public availability of data sufficient to build these models, the results also suggest that jurisdictions, such as France, that prohibit paternity testing without a court order, will need to continue to substantially limit the availability of direct-to-consumer genetics testing.  
 
 The data used for the fittings did not include any individuals that were related as siblings or through second order or higher relationships (grandparent, etc.).  With more available data, this might be an interesting additional inquiry, as intuition suggests that parent-child and sibling-sibling relationships could be distinguished by the number of wholly different SNPs, which are Mendelian errors only between a parent and child.
 
